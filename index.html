@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual HTML Builder - Lazarus Style IDE</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Monaco Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/editor/editor.main.min.css">
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-drag"></div>
+        <div class="window-controls">
+            <button class="window-control minimize" title="Свернуть">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect x="2" y="5" width="8" height="2" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="window-control maximize" title="Развернуть">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect x="2" y="2" width="8" height="8" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="window-control close" title="Закрыть">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M2.83 2l3.58 3.59L10 2l1.41 1.41L7.83 7l3.58 3.59L10 12 6.41 8.41 2.83 12 1.41 10.59 5 7 1.41 3.41 2.83 2z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <!-- Main Menu Bar -->
+    <div class="menu-bar">
+        <div class="menu-item" onclick="toggleMenu('fileMenu')">
+            Файл
+            <div class="menu-dropdown" id="fileMenu">
+                <div class="menu-option" onclick="newProject()">📄 Новый проект <span class="shortcut">Ctrl+N</span></div>
+                <div class="menu-option" onclick="loadProject()">📂 Открыть проект <span class="shortcut">Ctrl+O</span></div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="saveProject()">💾 Сохранить проект <span class="shortcut">Ctrl+S</span></div>
+                <div class="menu-option" onclick="saveProjectAs()">💾 Сохранить как...</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="exportHTML()">📤 Экспорт в HTML</div>
+                <div class="menu-option" onclick="exportCSS()">🎨 Экспорт CSS</div>
+                <div class="menu-option" onclick="exportJS()">⚡ Экспорт JavaScript</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="buildProject()">📦 Собрать проект (ZIP)</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="printProject()">🖨 Печать</div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('editMenu')">
+            Правка
+            <div class="menu-dropdown" id="editMenu">
+                <div class="menu-option" onclick="undoAction()">↩ Отменить <span class="shortcut">Ctrl+Z</span></div>
+                <div class="menu-option" onclick="redoAction()">↪ Повторить <span class="shortcut">Ctrl+Y</span></div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="cutElement()">✂ Вырезать <span class="shortcut">Ctrl+X</span></div>
+                <div class="menu-option" onclick="copyElement()">📋 Копировать <span class="shortcut">Ctrl+C</span></div>
+                <div class="menu-option" onclick="pasteElement()">📄 Вставить <span class="shortcut">Ctrl+V</span></div>
+                <div class="menu-option" onclick="duplicateElement()">📑 Дублировать <span class="shortcut">Ctrl+D</span></div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="deleteSelected()">🗑 Удалить <span class="shortcut">Delete</span></div>
+                <div class="menu-option" onclick="selectAllElements()">☑ Выделить все <span class="shortcut">Ctrl+A</span></div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('viewMenu')">
+            Вид
+            <div class="menu-dropdown" id="viewMenu">
+                <div class="menu-option" onclick="switchTab('design')">🎨 Дизайнер <span class="shortcut">F1</span></div>
+                <div class="menu-option" onclick="switchTab('html')">📄 HTML редактор <span class="shortcut">F2</span></div>
+                <div class="menu-option" onclick="switchTab('css')">🎨 CSS редактор <span class="shortcut">F3</span></div>
+                <div class="menu-option" onclick="switchTab('js')">⚡ JavaScript редактор <span class="shortcut">F4</span></div>
+                <div class="menu-option" onclick="switchTab('preview')">👁 Предпросмотр <span class="shortcut">F5</span></div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="togglePanel('left')">📦 Панель компонентов</div>
+                <div class="menu-option" onclick="togglePanel('right')">⚙️ Панель свойств</div>
+                <div class="menu-option" onclick="togglePanel('bottom')">🌳 Нижняя панель</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="toggleGrid()">📐 Показать сетку</div>
+                <div class="menu-option" onclick="toggleSnapToGrid()">🧲 Привязка к сетке</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="zoomIn()">🔍 Увеличить <span class="shortcut">Ctrl++</span></div>
+                <div class="menu-option" onclick="zoomOut()">🔍 Уменьшить <span class="shortcut">Ctrl+-</span></div>
+                <div class="menu-option" onclick="zoomReset()">🔍 Масштаб 100%</div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('projectMenu')">
+            Проект
+            <div class="menu-dropdown" id="projectMenu">
+                <div class="menu-option" onclick="runPreview()">▶ Запуск <span class="shortcut">F5</span></div>
+                <div class="menu-option" onclick="runInNewWindow()">🌐 Открыть в новом окне</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="validateHTML()">✅ Проверить HTML</div>
+                <div class="menu-option" onclick="validateCSS()">✅ Проверить CSS</div>
+                <div class="menu-option" onclick="validateJS()">✅ Проверить JavaScript</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="showProjectInfo()">ℹ️ Информация о проекте</div>
+                <div class="menu-option" onclick="clearProject()">🧹 Очистить проект</div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('settingsMenu')">
+            Настройки
+            <div class="menu-dropdown" id="settingsMenu">
+                <div class="menu-option" onclick="openSettings('general')">⚙️ Общие настройки</div>
+                <div class="menu-option" onclick="openSettings('editor')">📝 Настройки редактора</div>
+                <div class="menu-option" onclick="openSettings('canvas')">🎨 Настройки холста</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="openSettings('theme')">🌙 Тема оформления</div>
+                <div class="menu-option" onclick="openSettings('shortcuts')">⌨️ Горячие клавиши</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="resetSettings()">🔄 Сбросить настройки</div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('pluginsMenu')">
+            Плагины
+            <div class="menu-dropdown" id="pluginsMenu">
+                <div class="menu-option" onclick="openPluginManager()">🧩 Менеджер плагинов</div>
+                <div class="menu-option" onclick="installPlugin()">📦 Установить плагин</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option plugin-item" onclick="togglePlugin('bootstrap')">
+                    <span class="plugin-check" id="pluginBootstrap">☐</span> Bootstrap 5
+                </div>
+                <div class="menu-option plugin-item" onclick="togglePlugin('fontawesome')">
+                    <span class="plugin-check" id="pluginFontawesome">☐</span> Font Awesome
+                </div>
+                <div class="menu-option plugin-item" onclick="togglePlugin('animate')">
+                    <span class="plugin-check" id="pluginAnimate">☐</span> Animate.css
+                </div>
+                <div class="menu-option plugin-item" onclick="togglePlugin('jquery')">
+                    <span class="plugin-check" id="pluginJquery">☐</span> jQuery
+                </div>
+            </div>
+        </div>
+        <div class="menu-item" onclick="toggleMenu('helpMenu')">
+            Справка
+            <div class="menu-dropdown" id="helpMenu">
+                <div class="menu-option" onclick="showHelp()">❓ Справка <span class="shortcut">F1</span></div>
+                <div class="menu-option" onclick="showShortcuts()">⌨️ Горячие клавиши</div>
+                <div class="menu-divider"></div>
+                <div class="menu-option" onclick="showAbout()">ℹ️ О программе</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-brand">
+            <span>🎨 Visual HTML Builder</span>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-buttons">
+            <button onclick="newProject()" class="toolbar-btn" title="Новый проект (Ctrl+N)">📄 Новый</button>
+            <button onclick="saveProject()" class="toolbar-btn" title="Сохранить проект (Ctrl+S)">💾 Сохранить</button>
+            <button onclick="loadProject()" class="toolbar-btn" title="Открыть проект (Ctrl+O)">📂 Загрузить</button>
+            <button onclick="exportHTML()" class="toolbar-btn" title="Экспорт в HTML">📤 Экспорт HTML</button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-buttons">
+            <button onclick="runPreview()" class="toolbar-btn btn-run" title="Запустить предпросмотр (F5)">▶ Запуск</button>
+            <button onclick="runInNewWindow()" class="toolbar-btn btn-run" title="Открыть в новом окне">🌐</button>
+            <button onclick="deleteSelected()" class="toolbar-btn btn-delete" title="Удалить выбранный элемент (Delete)">🗑 Удалить</button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-buttons">
+            <button onclick="undoAction()" class="toolbar-btn" title="Отменить (Ctrl+Z)">↩</button>
+            <button onclick="redoAction()" class="toolbar-btn" title="Повторить (Ctrl+Y)">↪</button>
+            <button onclick="copyElement()" class="toolbar-btn" title="Копировать (Ctrl+C)">📋</button>
+            <button onclick="pasteElement()" class="toolbar-btn" title="Вставить (Ctrl+V)">📄</button>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <div class="toolbar-status">
+            <span id="statusText">Готов к работе</span>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left Panel - Components -->
+        <div class="panel-left" id="panelLeft">
+            <div class="panel-header">📦 Компоненты</div>
+            <div class="components-list">
+                <div class="component-group-title">Стандартные</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="button">🔘 Кнопка (Button)</div>
+                    <div class="component-item" draggable="true" data-type="label">🏷 Надпись (Label)</div>
+                    <div class="component-item" draggable="true" data-type="input">📝 Поле ввода (Input)</div>
+                    <div class="component-item" draggable="true" data-type="textarea">📄 Текстовое поле</div>
+                    <div class="component-item" draggable="true" data-type="checkbox">☑ Флажок (Checkbox)</div>
+                    <div class="component-item" draggable="true" data-type="radio">🔘 Радио (Radio)</div>
+                    <div class="component-item" draggable="true" data-type="select">📋 Список (Select)</div>
+                </div>
+                
+                <div class="component-group-title">Поля ввода</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="password">🔒 Пароль</div>
+                    <div class="component-item" draggable="true" data-type="email">📧 Email</div>
+                    <div class="component-item" draggable="true" data-type="number">🔢 Число</div>
+                    <div class="component-item" draggable="true" data-type="date">📅 Дата</div>
+                    <div class="component-item" draggable="true" data-type="time">⏰ Время</div>
+                    <div class="component-item" draggable="true" data-type="color">🎨 Цвет</div>
+                    <div class="component-item" draggable="true" data-type="range">🎚 Ползунок</div>
+                    <div class="component-item" draggable="true" data-type="file">📁 Файл</div>
+                    <div class="component-item" draggable="true" data-type="search">🔍 Поиск</div>
+                </div>
+                
+                <div class="component-group-title">Контейнеры</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="div">📦 Блок (Div)</div>
+                    <div class="component-item" draggable="true" data-type="panel">🪟 Панель (Panel)</div>
+                    <div class="component-item" draggable="true" data-type="card">🃏 Карточка</div>
+                    <div class="component-item" draggable="true" data-type="header">📋 Header</div>
+                    <div class="component-item" draggable="true" data-type="footer">📋 Footer</div>
+                    <div class="component-item" draggable="true" data-type="section">📑 Section</div>
+                    <div class="component-item" draggable="true" data-type="article">📰 Article</div>
+                    <div class="component-item" draggable="true" data-type="aside">📎 Aside</div>
+                    <div class="component-item" draggable="true" data-type="fieldset">🔲 Fieldset</div>
+                    <div class="component-item" draggable="true" data-type="details">📂 Details</div>
+                    <div class="component-item" draggable="true" data-type="modal">🪟 Модальное окно</div>
+                </div>
+                
+                <div class="component-group-title">Навигация</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="nav">🧭 Навигация</div>
+                    <div class="component-item" draggable="true" data-type="menu">☰ Меню</div>
+                    <div class="component-item" draggable="true" data-type="breadcrumb">🥖 Хлебные крошки</div>
+                    <div class="component-item" draggable="true" data-type="tabs">📑 Вкладки</div>
+                    <div class="component-item" draggable="true" data-type="pagination">📄 Пагинация</div>
+                </div>
+                
+                <div class="component-group-title">Текст</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="heading">📰 Заголовок H1</div>
+                    <div class="component-item" draggable="true" data-type="heading2">📰 Заголовок H2</div>
+                    <div class="component-item" draggable="true" data-type="heading3">📰 Заголовок H3</div>
+                    <div class="component-item" draggable="true" data-type="paragraph">📝 Параграф</div>
+                    <div class="component-item" draggable="true" data-type="span">🏷 Span</div>
+                    <div class="component-item" draggable="true" data-type="blockquote">💬 Цитата</div>
+                    <div class="component-item" draggable="true" data-type="code">💻 Код</div>
+                    <div class="component-item" draggable="true" data-type="pre">📋 Preformatted</div>
+                    <div class="component-item" draggable="true" data-type="hr">➖ Линия (HR)</div>
+                </div>
+                
+                <div class="component-group-title">Списки</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="ul">• Маркированный</div>
+                    <div class="component-item" draggable="true" data-type="ol">1. Нумерованный</div>
+                    <div class="component-item" draggable="true" data-type="dl">📖 Определения</div>
+                </div>
+                
+                <div class="component-group-title">Таблицы</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="table">📊 Таблица</div>
+                    <div class="component-item" draggable="true" data-type="tableAdvanced">📊 Таблица (расш.)</div>
+                </div>
+                
+                <div class="component-group-title">Медиа</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="image">🖼 Изображение</div>
+                    <div class="component-item" draggable="true" data-type="video">🎬 Видео</div>
+                    <div class="component-item" draggable="true" data-type="audio">🔊 Аудио</div>
+                    <div class="component-item" draggable="true" data-type="iframe">🌐 Iframe</div>
+                    <div class="component-item" draggable="true" data-type="canvas">🎨 Canvas</div>
+                    <div class="component-item" draggable="true" data-type="svg">✨ SVG</div>
+                </div>
+                
+                <div class="component-group-title">Ссылки</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="link">🔗 Ссылка</div>
+                    <div class="component-item" draggable="true" data-type="buttonLink">🔗 Кнопка-ссылка</div>
+                    <div class="component-item" draggable="true" data-type="socialLinks">🌐 Соц. сети</div>
+                </div>
+                
+                <div class="component-group-title">Индикаторы</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="progress">📊 Прогресс</div>
+                    <div class="component-item" draggable="true" data-type="meter">📈 Meter</div>
+                    <div class="component-item" draggable="true" data-type="spinner">⏳ Спиннер</div>
+                    <div class="component-item" draggable="true" data-type="badge">🏷 Бейдж</div>
+                    <div class="component-item" draggable="true" data-type="alert">⚠️ Уведомление</div>
+                    <div class="component-item" draggable="true" data-type="tooltip">💡 Tooltip</div>
+                </div>
+                
+                <div class="component-group-title">Формы</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="form">📋 Форма</div>
+                    <div class="component-item" draggable="true" data-type="formGroup">📝 Группа полей</div>
+                    <div class="component-item" draggable="true" data-type="submitBtn">✅ Кнопка отправки</div>
+                    <div class="component-item" draggable="true" data-type="resetBtn">🔄 Кнопка сброса</div>
+                </div>
+                
+                <div class="component-group-title">Интерактивные</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="accordion">🪗 Аккордеон</div>
+                    <div class="component-item" draggable="true" data-type="dropdown">📂 Dropdown</div>
+                    <div class="component-item" draggable="true" data-type="carousel">🎠 Карусель</div>
+                    <div class="component-item" draggable="true" data-type="toggle">🔘 Переключатель</div>
+                    <div class="component-item" draggable="true" data-type="rating">⭐ Рейтинг</div>
+                </div>
+                
+                <div class="component-group-title">Иконки</div>
+                <div class="component-group">
+                    <div class="component-item" draggable="true" data-type="icon">⭐ Иконка</div>
+                    <div class="component-item" draggable="true" data-type="avatar">👤 Аватар</div>
+                    <div class="component-item" draggable="true" data-type="emoji">😀 Эмодзи</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center - Design Canvas + Code Editor -->
+        <div class="panel-center">
+            <!-- Tabs -->
+            <div class="tabs-bar">
+                <button onclick="switchTab('design')" class="tab-btn active" id="tabDesign">🎨 Дизайнер</button>
+                <button onclick="switchTab('html')" class="tab-btn" id="tabHtml">📄 HTML</button>
+                <button onclick="switchTab('css')" class="tab-btn" id="tabCss">🎨 CSS</button>
+                <button onclick="switchTab('js')" class="tab-btn" id="tabJs">⚡ JavaScript</button>
+                <button onclick="switchTab('preview')" class="tab-btn" id="tabPreview">👁 Просмотр</button>
+            </div>
+            
+            <!-- Design Canvas -->
+            <div id="designPanel" class="tab-panel">
+                <!-- Pages Bar -->
+                <div class="pages-bar">
+                    <div class="pages-tabs" id="pagesTabs">
+                        <div class="page-tab active" data-page="0" onclick="switchPage(0)">
+                            <span class="page-name">index.html</span>
+                            <button class="page-close" onclick="event.stopPropagation(); closePage(0)" title="Закрыть">×</button>
+                        </div>
+                    </div>
+                    <button class="add-page-btn" onclick="addNewPage()" title="Добавить страницу">+ Новая страница</button>
+                </div>
+                <!-- Canvas Settings Bar -->
+                <div class="canvas-settings-bar">
+                    <div class="canvas-settings-group">
+                        <label>Ширина:</label>
+                        <input type="number" id="canvasWidth" value="800" min="320" max="1920" onchange="updateCanvasSettings()">
+                        <label>Высота:</label>
+                        <input type="number" id="canvasHeight" value="600" min="200" max="2000" onchange="updateCanvasSettings()">
+                    </div>
+                    <div class="canvas-settings-group">
+                        <label>Фон:</label>
+                        <input type="color" id="canvasBgColor" value="#ffffff" onchange="updateCanvasSettings()">
+                        <input type="text" id="canvasBgColorText" value="#ffffff" onchange="updateCanvasSettings()" style="width: 80px;">
+                    </div>
+                    <div class="canvas-settings-group">
+                        <label>
+                            <input type="checkbox" id="canvasShowGrid" checked onchange="updateCanvasSettings()">
+                            Сетка
+                        </label>
+                        <label>Размер:</label>
+                        <input type="number" id="canvasGridSize" value="10" min="5" max="50" onchange="updateCanvasSettings()">
+                    </div>
+                    <div class="canvas-settings-group">
+                        <label>
+                            <input type="checkbox" id="canvasSnapToGrid" checked onchange="updateCanvasSettings()">
+                            Привязка
+                        </label>
+                    </div>
+                    <div class="canvas-settings-group">
+                        <button class="canvas-preset-btn" onclick="setCanvasPreset('mobile')">📱 Mobile</button>
+                        <button class="canvas-preset-btn" onclick="setCanvasPreset('tablet')">📱 Tablet</button>
+                        <button class="canvas-preset-btn" onclick="setCanvasPreset('desktop')">🖥 Desktop</button>
+                        <button class="canvas-preset-btn" onclick="setCanvasPreset('fullhd')">🖥 Full HD</button>
+                    </div>
+                </div>
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <div id="designCanvas" class="design-canvas">
+                        <!-- Designed elements will appear here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- HTML Editor -->
+            <div id="htmlPanel" class="tab-panel hidden">
+                <div class="editor-toolbar">
+                    <div class="editor-toolbar-left">
+                        <span class="editor-label">📄 HTML Редактор</span>
+                        <label class="sync-toggle">
+                            <input type="checkbox" id="htmlAutoSync" checked onchange="toggleAutoSync('html', this.checked)">
+                            <span>Авто-синхронизация</span>
+                        </label>
+                    </div>
+                    <div class="editor-toolbar-right">
+                        <button class="editor-btn" onclick="applyHTMLChanges()" title="Применить изменения к холсту">✅ Применить</button>
+                        <button class="editor-btn" onclick="generateHTML()" title="Обновить из дизайнера">🔄 Обновить</button>
+                        <button class="editor-btn" onclick="formatCode('html')" title="Форматировать код">📐 Формат</button>
+                    </div>
+                </div>
+                <div id="htmlEditorContainer" class="monaco-container"></div>
+            </div>
+            
+            <!-- CSS Editor -->
+            <div id="cssPanel" class="tab-panel hidden">
+                <div class="editor-toolbar">
+                    <div class="editor-toolbar-left">
+                        <span class="editor-label">🎨 CSS Редактор</span>
+                        <label class="sync-toggle">
+                            <input type="checkbox" id="cssAutoSync" checked onchange="toggleAutoSync('css', this.checked)">
+                            <span>Авто-синхронизация</span>
+                        </label>
+                    </div>
+                    <div class="editor-toolbar-right">
+                        <button class="editor-btn" onclick="applyCSSChanges()" title="Применить стили к холсту">✅ Применить</button>
+                        <button class="editor-btn" onclick="generateCSS()" title="Обновить из дизайнера">🔄 Обновить</button>
+                        <button class="editor-btn" onclick="formatCode('css')" title="Форматировать код">📐 Формат</button>
+                    </div>
+                </div>
+                <div id="cssEditorContainer" class="monaco-container"></div>
+            </div>
+            
+            <!-- JS Editor -->
+            <div id="jsPanel" class="tab-panel hidden">
+                <div class="editor-toolbar">
+                    <div class="editor-toolbar-left">
+                        <span class="editor-label">⚡ JavaScript Редактор</span>
+                        <div class="editor-mode-toggle">
+                            <button class="mode-btn active" id="modeCode" onclick="setJSEditorMode('code')">📝 Код</button>
+                            <button class="mode-btn" id="modeVisual" onclick="setJSEditorMode('visual')">🧩 Визуальный</button>
+                        </div>
+                    </div>
+                    <div class="editor-toolbar-right">
+                        <button class="editor-btn" onclick="runJSCode()" title="Выполнить код">▶ Выполнить</button>
+                        <button class="editor-btn" onclick="formatCode('js')" title="Форматировать код">📐 Формат</button>
+                        <button class="editor-btn" onclick="validateJS()" title="Проверить синтаксис">✅ Проверить</button>
+                    </div>
+                </div>
+                <div class="js-editor-wrapper">
+                    <!-- Панель быстрых функций -->
+                    <div class="js-snippets-panel" id="jsSnippetsPanel">
+                        <div class="snippets-header">🧩 Быстрые функции</div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>📍 События элементов</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('onClick')">
+                                    <span class="snippet-icon">👆</span>
+                                    <span class="snippet-name">Клик по элементу</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onHover')">
+                                    <span class="snippet-icon">🖱</span>
+                                    <span class="snippet-name">Наведение мыши</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onInput')">
+                                    <span class="snippet-icon">⌨️</span>
+                                    <span class="snippet-name">Ввод в поле</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onSubmit')">
+                                    <span class="snippet-icon">📤</span>
+                                    <span class="snippet-name">Отправка формы</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onKeyPress')">
+                                    <span class="snippet-icon">⌨️</span>
+                                    <span class="snippet-name">Нажатие клавиши</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onScroll')">
+                                    <span class="snippet-icon">📜</span>
+                                    <span class="snippet-name">Прокрутка страницы</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onLoad')">
+                                    <span class="snippet-icon">🚀</span>
+                                    <span class="snippet-name">Загрузка страницы</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>🎯 DOM манипуляции</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('getElement')">
+                                    <span class="snippet-icon">🔍</span>
+                                    <span class="snippet-name">Получить элемент</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('getAllElements')">
+                                    <span class="snippet-icon">🔍</span>
+                                    <span class="snippet-name">Получить все элементы</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('createElement')">
+                                    <span class="snippet-icon">➕</span>
+                                    <span class="snippet-name">Создать элемент</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('removeElement')">
+                                    <span class="snippet-icon">🗑</span>
+                                    <span class="snippet-name">Удалить элемент</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('changeText')">
+                                    <span class="snippet-icon">📝</span>
+                                    <span class="snippet-name">Изменить текст</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('changeHTML')">
+                                    <span class="snippet-icon">📄</span>
+                                    <span class="snippet-name">Изменить HTML</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('addClass')">
+                                    <span class="snippet-icon">🏷</span>
+                                    <span class="snippet-name">Добавить класс</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('removeClass')">
+                                    <span class="snippet-icon">🏷</span>
+                                    <span class="snippet-name">Удалить класс</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('toggleClass')">
+                                    <span class="snippet-icon">🔄</span>
+                                    <span class="snippet-name">Переключить класс</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('changeStyle')">
+                                    <span class="snippet-icon">🎨</span>
+                                    <span class="snippet-name">Изменить стиль</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('getAttribute')">
+                                    <span class="snippet-icon">📋</span>
+                                    <span class="snippet-name">Получить атрибут</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('setAttribute')">
+                                    <span class="snippet-icon">✏️</span>
+                                    <span class="snippet-name">Установить атрибут</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>🔀 Условия и циклы</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('ifElse')">
+                                    <span class="snippet-icon">❓</span>
+                                    <span class="snippet-name">Если / Иначе</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('switch')">
+                                    <span class="snippet-icon">🔀</span>
+                                    <span class="snippet-name">Переключатель (switch)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('forLoop')">
+                                    <span class="snippet-icon">🔁</span>
+                                    <span class="snippet-name">Цикл for</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('forEach')">
+                                    <span class="snippet-icon">🔁</span>
+                                    <span class="snippet-name">Цикл forEach</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('whileLoop')">
+                                    <span class="snippet-icon">🔁</span>
+                                    <span class="snippet-name">Цикл while</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('mapArray')">
+                                    <span class="snippet-icon">🗺</span>
+                                    <span class="snippet-name">Преобразовать массив</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('filterArray')">
+                                    <span class="snippet-icon">🔍</span>
+                                    <span class="snippet-name">Фильтровать массив</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>📦 Функции</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('function')">
+                                    <span class="snippet-icon">📦</span>
+                                    <span class="snippet-name">Обычная функция</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('arrowFunction')">
+                                    <span class="snippet-icon">➡️</span>
+                                    <span class="snippet-name">Стрелочная функция</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('asyncFunction')">
+                                    <span class="snippet-icon">⏳</span>
+                                    <span class="snippet-name">Асинхронная функция</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('iife')">
+                                    <span class="snippet-icon">🚀</span>
+                                    <span class="snippet-name">IIFE (самовызов)</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>🌐 AJAX / Fetch</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('fetchGet')">
+                                    <span class="snippet-icon">📥</span>
+                                    <span class="snippet-name">GET запрос</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('fetchPost')">
+                                    <span class="snippet-icon">📤</span>
+                                    <span class="snippet-name">POST запрос</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('fetchJSON')">
+                                    <span class="snippet-icon">📋</span>
+                                    <span class="snippet-name">Загрузить JSON</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('fetchAsync')">
+                                    <span class="snippet-icon">⏳</span>
+                                    <span class="snippet-name">Async/Await запрос</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>🎬 Анимации</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('fadeIn')">
+                                    <span class="snippet-icon">🌅</span>
+                                    <span class="snippet-name">Плавное появление</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('fadeOut')">
+                                    <span class="snippet-icon">🌇</span>
+                                    <span class="snippet-name">Плавное исчезновение</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('slideToggle')">
+                                    <span class="snippet-icon">📏</span>
+                                    <span class="snippet-name">Слайд toggle</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('animate')">
+                                    <span class="snippet-icon">🎭</span>
+                                    <span class="snippet-name">CSS анимация</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('requestAnimation')">
+                                    <span class="snippet-icon">🎞</span>
+                                    <span class="snippet-name">requestAnimationFrame</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>💾 Хранилище</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('localStorageSet')">
+                                    <span class="snippet-icon">💾</span>
+                                    <span class="snippet-name">Сохранить в localStorage</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('localStorageGet')">
+                                    <span class="snippet-icon">📂</span>
+                                    <span class="snippet-name">Получить из localStorage</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('localStorageRemove')">
+                                    <span class="snippet-icon">🗑</span>
+                                    <span class="snippet-name">Удалить из localStorage</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('sessionStorageSet')">
+                                    <span class="snippet-icon">💾</span>
+                                    <span class="snippet-name">Сохранить в sessionStorage</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('cookieSet')">
+                                    <span class="snippet-icon">🍪</span>
+                                    <span class="snippet-name">Установить cookie</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('cookieGet')">
+                                    <span class="snippet-icon">🍪</span>
+                                    <span class="snippet-name">Получить cookie</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>✅ Валидация форм</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('validateEmail')">
+                                    <span class="snippet-icon">📧</span>
+                                    <span class="snippet-name">Проверка email</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('validatePhone')">
+                                    <span class="snippet-icon">📱</span>
+                                    <span class="snippet-name">Проверка телефона</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('validateRequired')">
+                                    <span class="snippet-icon">❗</span>
+                                    <span class="snippet-name">Обязательное поле</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('validateLength')">
+                                    <span class="snippet-icon">📏</span>
+                                    <span class="snippet-name">Проверка длины</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('validatePassword')">
+                                    <span class="snippet-icon">🔒</span>
+                                    <span class="snippet-name">Проверка пароля</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('validateForm')">
+                                    <span class="snippet-icon">📋</span>
+                                    <span class="snippet-name">Валидация формы</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>⏰ Таймеры</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('setTimeout')">
+                                    <span class="snippet-icon">⏱</span>
+                                    <span class="snippet-name">Задержка (setTimeout)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('setInterval')">
+                                    <span class="snippet-icon">🔄</span>
+                                    <span class="snippet-name">Интервал (setInterval)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('clearTimer')">
+                                    <span class="snippet-icon">⏹</span>
+                                    <span class="snippet-name">Остановить таймер</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('debounce')">
+                                    <span class="snippet-icon">🎯</span>
+                                    <span class="snippet-name">Debounce функция</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('throttle')">
+                                    <span class="snippet-icon">🎚</span>
+                                    <span class="snippet-name">Throttle функция</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>💬 Диалоги</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('alert')">
+                                    <span class="snippet-icon">⚠️</span>
+                                    <span class="snippet-name">Уведомление (alert)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('confirm')">
+                                    <span class="snippet-icon">❓</span>
+                                    <span class="snippet-name">Подтверждение (confirm)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('prompt')">
+                                    <span class="snippet-icon">✏️</span>
+                                    <span class="snippet-name">Ввод (prompt)</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('customModal')">
+                                    <span class="snippet-icon">🪟</span>
+                                    <span class="snippet-name">Модальное окно</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('toast')">
+                                    <span class="snippet-icon">📢</span>
+                                    <span class="snippet-name">Toast уведомление</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="snippets-category">
+                            <div class="snippets-category-title" onclick="toggleSnippetCategory(this)">
+                                <span>📱 Устройство</span>
+                                <span class="category-arrow">▼</span>
+                            </div>
+                            <div class="snippets-list">
+                                <div class="snippet-item" onclick="insertSnippet('detectMobile')">
+                                    <span class="snippet-icon">📱</span>
+                                    <span class="snippet-name">Определить мобильный</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('getScreenSize')">
+                                    <span class="snippet-icon">🖥</span>
+                                    <span class="snippet-name">Размер экрана</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('onResize')">
+                                    <span class="snippet-icon">↔️</span>
+                                    <span class="snippet-name">При изменении размера</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('copyToClipboard')">
+                                    <span class="snippet-icon">📋</span>
+                                    <span class="snippet-name">Копировать в буфер</span>
+                                </div>
+                                <div class="snippet-item" onclick="insertSnippet('geolocation')">
+                                    <span class="snippet-icon">📍</span>
+                                    <span class="snippet-name">Геолокация</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Monaco Editor -->
+                    <div id="jsEditorContainer" class="monaco-container"></div>
+                </div>
+            </div>
+            
+            <!-- Preview -->
+            <div id="previewPanel" class="tab-panel hidden">
+                <iframe id="previewFrame" class="preview-frame"></iframe>
+            </div>
+        </div>
+
+        <!-- Right Panel - Properties -->
+        <div class="panel-right" id="panelRight">
+            <div class="panel-header">⚙️ Свойства</div>
+            <div id="propertiesPanel" class="properties-content">
+                <div class="empty-message">
+                    Выберите элемент<br>для редактирования
+                </div>
+            </div>
+            
+            <div class="panel-header">⚡ События</div>
+            <div id="eventsPanel" class="events-content">
+                <div class="empty-message">
+                    Выберите элемент<br>для настройки событий
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Panel -->
+    <div class="panel-bottom" id="panelBottom">
+        <div class="bottom-left">
+            <div class="panel-header">🌳 Дерево объектов</div>
+            <div id="objectTree" class="object-tree">
+                <!-- Object tree -->
+            </div>
+        </div>
+        <div class="bottom-right">
+            <div class="panel-header">💬 Сообщения</div>
+            <div id="messagesPanel" class="messages-panel">
+                <div class="msg-info">[INFO] Visual HTML Builder загружен</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading -->
+    <input type="file" id="fileInput" accept=".vhb,.json" style="display: none;">
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="undoAction()">
+            <span class="context-icon">↩</span> Отменить
+            <span class="context-shortcut">Ctrl+Z</span>
+        </div>
+        <div class="context-menu-item" onclick="redoAction()">
+            <span class="context-icon">↪</span> Повторить
+            <span class="context-shortcut">Ctrl+Y</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-menu-item" onclick="cutElement()">
+            <span class="context-icon">✂</span> Вырезать
+            <span class="context-shortcut">Ctrl+X</span>
+        </div>
+        <div class="context-menu-item" onclick="copyElement()">
+            <span class="context-icon">📋</span> Копировать
+            <span class="context-shortcut">Ctrl+C</span>
+        </div>
+        <div class="context-menu-item" onclick="pasteElement()">
+            <span class="context-icon">📄</span> Вставить
+            <span class="context-shortcut">Ctrl+V</span>
+        </div>
+        <div class="context-menu-item" onclick="duplicateElement()">
+            <span class="context-icon">📑</span> Дублировать
+            <span class="context-shortcut">Ctrl+D</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-menu-item" onclick="deleteSelected()">
+            <span class="context-icon">🗑</span> Удалить
+            <span class="context-shortcut">Delete</span>
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-menu-item" onclick="bringToFront()">
+            <span class="context-icon">⬆</span> На передний план
+        </div>
+        <div class="context-menu-item" onclick="sendToBack()">
+            <span class="context-icon">⬇</span> На задний план
+        </div>
+        <div class="context-divider"></div>
+        <div class="context-menu-item" onclick="lockElement()">
+            <span class="context-icon">🔒</span> Заблокировать
+        </div>
+        <div class="context-menu-item" onclick="hideElement()">
+            <span class="context-icon">👁</span> Скрыть/Показать
+        </div>
+    </div>
+
+    <!-- Modal for Settings/About/etc -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="modalTitle">Заголовок</span>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="modal-btn" onclick="closeModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSZip for project building -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="renderer.js"></script>
+    <!-- Monaco Editor Loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+        // Configure Monaco Editor
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+        
+        // Load Monaco and then our app
+        require(['vs/editor/editor.main'], function () {
+            window.monacoLoaded = true;
+            
+            // Load app.js after Monaco is ready
+            const script = document.createElement('script');
+            script.src = 'app.js';
+            document.body.appendChild(script);
+        });
+    </script>
+</body>
+</html>
